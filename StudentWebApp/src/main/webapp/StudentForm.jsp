@@ -11,13 +11,13 @@
 <h2>Student Form</h2>
 
       
-      <form action = "">
+      <form action = "StudentService" method="post">
       <label>
-        First name:</label> <input type = "text" name = "first_name" placeholder="Enter your firstname">
+        First name:</label> <input type = "text" name = "firstname" placeholder="Enter your firstname">
          <br> <br>
          
          <label>Last name: </label>
-         <input type = "text" name = "last_name" placeholder="Enter your lastname" />
+         <input type = "text" name = "lastname" placeholder="Enter your lastname" />
             <br> <br>
          <label>Gender: </label>
          <input type="radio" name="gender" value="male"/>Male
