@@ -11,7 +11,7 @@
 <h2>Student Form</h2>
 
       
-      <form action = "StudentService" method="post">
+      <form action = "StudentController" method="post">
       <label>
         First name:</label> <input type = "text" name = "firstname" placeholder="Enter your firstname">
          <br> <br>
