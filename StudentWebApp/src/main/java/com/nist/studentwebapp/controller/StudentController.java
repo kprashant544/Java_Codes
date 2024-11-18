@@ -36,8 +36,69 @@ public class StudentController extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+
+		String action = request.getParameter("action");
+
+		if ("view".equals(action)) {
+			// View all students
+			viewStudents(request, response);
+		} else if ("delete".equals(action)) {
+			// Delete a student
+			int id = Integer.parseInt(request.getParameter("id"));
+			deleteStudent(id);
+			// Redirect back to the student details page after deletion
+			response.sendRedirect("StudentController?action=view");
+		}
+	}
+
+	// Method to retrieve all students from the database
+	private void viewStudents(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		String sql1 = "SELECT * FROM studentdata";
+		ArrayList<Student> studentList = new ArrayList<>();
+		try {
+			PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql1);
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String firstname1 = rs.getString("firstname");
+				String lastname1 = rs.getString("lastname");
+				String gender1 = rs.getString("gender");
+				String course1 = rs.getString("course");
+				String address1 = rs.getString("address");
+				long contact1 = rs.getLong("contact");
+
+				Student student = new Student();
+				student.setId(id);
+				student.setFirstname(firstname1);
+				student.setLastname(lastname1);
+				student.setGender(gender1);
+				student.setCourse(course1);
+				student.setAddress(address1);
+				student.setContact(contact1);
+				studentList.add(student);
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		request.setAttribute("stdList", studentList);
+		RequestDispatcher rd = request.getRequestDispatcher("Student_Details.jsp");
+		rd.forward(request, response);
+	}
+
+	// Method to delete a student from the database
+	private void deleteStudent(int id) {
+		String sql = "DELETE FROM studentdata WHERE id = ?";
+		try {
+			PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql);
+			ps.setInt(1, id);
+			ps.executeUpdate();
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 	}
 
 	/**
@@ -83,8 +144,6 @@ public class StudentController extends HttpServlet {
 		} catch (Exception err) {
 			System.out.println(err);
 		}
-		RequestDispatcher rd = request.getRequestDispatcher("Student_Details.jsp");
-		rd.forward(request, response);
 
 		// after insert query
 		String sql1 = "Select * from studentdata";
@@ -102,7 +161,14 @@ public class StudentController extends HttpServlet {
 				String address1 = rs.getString("address");
 				long contact1 = rs.getLong("contact");
 
-				Student student = new Student(id, firstname1, lastname1, gender1, course1, address1, contact1);
+				Student student = new Student();
+				student.setId(id);
+				student.setFirstname(firstname1);
+				student.setLastname(lastname1);
+				student.setGender(gender1);
+				student.setCourse(course1);
+				student.setAddress(address1);
+				student.setContact(contact1);
 				studentList.add(student);
 			}
 
@@ -110,12 +176,16 @@ public class StudentController extends HttpServlet {
 			System.out.println(e);
 		}
 
-		for (Student std : studentList) {
-			System.out.println(std.id + "\t" + std.firstname + "\t" + std.lastname + "\t" + std.gender + "\t"
-					+ std.course + "\t" + std.address + "\t" + std.contact);
-		}
+		request.setAttribute("stdList", studentList);
+		RequestDispatcher rd = request.getRequestDispatcher("Student_Details.jsp");
+		rd.forward(request, response);
 
-//		doGet(request, response);
+//		for (Student std : studentList) {
+//			System.out.println(std.id + "\t" + std.firstname + "\t" + std.lastname + "\t" + std.gender + "\t"
+//					+ std.course + "\t" + std.address + "\t" + std.contact);
+//		}
+
+		doGet(request, response);
 	}
 
 }
