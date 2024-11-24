@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -30,81 +29,6 @@ public class StudentController extends HttpServlet {
 		// TODO Auto-generated constructor stub
 	}
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-
-		String action = request.getParameter("action");
-
-		if ("view".equals(action)) {
-			// View all students
-			viewStudents(request, response);
-		} else if ("delete".equals(action)) {
-			// Delete a student
-			int id = Integer.parseInt(request.getParameter("id"));
-			deleteStudent(id);
-			// Redirect back to the student details page after deletion
-			response.sendRedirect("StudentController?action=view");
-		}
-	}
-
-	// Method to retrieve all students from the database
-	private void viewStudents(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-
-		String sql1 = "SELECT * FROM studentdata";
-		ArrayList<Student> studentList = new ArrayList<>();
-		try {
-			PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql1);
-			ResultSet rs = ps.executeQuery();
-
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String firstname1 = rs.getString("firstname");
-				String lastname1 = rs.getString("lastname");
-				String gender1 = rs.getString("gender");
-				String course1 = rs.getString("course");
-				String address1 = rs.getString("address");
-				long contact1 = rs.getLong("contact");
-
-				Student student = new Student();
-				student.setId(id);
-				student.setFirstname(firstname1);
-				student.setLastname(lastname1);
-				student.setGender(gender1);
-				student.setCourse(course1);
-				student.setAddress(address1);
-				student.setContact(contact1);
-				studentList.add(student);
-			}
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-
-		request.setAttribute("stdList", studentList);
-		RequestDispatcher rd = request.getRequestDispatcher("Student_Details.jsp");
-		rd.forward(request, response);
-	}
-
-	// Method to delete a student from the database
-	private void deleteStudent(int id) {
-		String sql = "DELETE FROM studentdata WHERE id = ?";
-		try {
-			PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql);
-			ps.setInt(1, id);
-			ps.executeUpdate();
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
@@ -114,24 +38,23 @@ public class StudentController extends HttpServlet {
 		String courses[] = request.getParameterValues("course");
 		String address = request.getParameter("address");
 		long contact = Long.parseLong(request.getParameter("contact"));
-
-		// Convert courses array to a readable format for printing
-		String coursesString = Arrays.toString(courses);
-
-		System.out.println("first name is :" + firstname);
-		System.out.println("last name is :" + lastname);
-		System.out.println("gender is :" + gender);
-		System.out.println("course is :" + coursesString);
-		System.out.println("address is :" + address);
-		System.out.println("contact is :" + contact);
+		String id = request.getParameter("id");
+		System.out.println("value of id is " + id);
 
 		// Join selected courses with commas
 		String coursesJoined = String.join(",", courses);
 
 		PreparedStatement ps = null;
-		String sql = "Insert into studentdata(firstname,lastname,gender,course,address,contact)values(?,?,?,?,?,?)";
-
+		String sql = "";
 		try {
+
+			if (id == null || id.isEmpty()) {
+				sql = "Insert into studentdata(firstname,lastname,gender,course,address,contact)values(?,?,?,?,?,?)";
+			} else {
+				sql = "update studentdata set firstname=?, lastname = ?, gender=?, course =?, address=?, contact=? where id=?";
+
+			}
+
 			ps = DatabaseConnection.getConnection().prepareStatement(sql);
 			ps.setString(1, firstname);
 			ps.setString(2, lastname);
@@ -139,13 +62,17 @@ public class StudentController extends HttpServlet {
 			ps.setString(4, coursesJoined); // Print all selected courses
 			ps.setString(5, address);
 			ps.setLong(6, contact);
+
+			if (id != null && !id.isEmpty()) {
+				ps.setInt(7, Integer.parseInt(id));
+			}
 			ps.executeUpdate();
 
 		} catch (Exception err) {
 			System.out.println(err);
 		}
 
-		// after insert query
+		// after insert and select query
 		String sql1 = "Select * from studentdata";
 		ArrayList<Student> studentList = new ArrayList<>();
 		try {
@@ -153,7 +80,7 @@ public class StudentController extends HttpServlet {
 			ResultSet rs = ps.executeQuery();
 
 			while (rs.next()) {
-				int id = rs.getInt("id");
+				int id1 = rs.getInt("id");
 				String firstname1 = rs.getString("firstname");
 				String lastname1 = rs.getString("lastname");
 				String gender1 = rs.getString("gender");
@@ -162,13 +89,14 @@ public class StudentController extends HttpServlet {
 				long contact1 = rs.getLong("contact");
 
 				Student student = new Student();
-				student.setId(id);
+				student.setId(id1);
 				student.setFirstname(firstname1);
 				student.setLastname(lastname1);
 				student.setGender(gender1);
 				student.setCourse(course1);
 				student.setAddress(address1);
 				student.setContact(contact1);
+
 				studentList.add(student);
 			}
 
@@ -176,14 +104,9 @@ public class StudentController extends HttpServlet {
 			System.out.println(e);
 		}
 
-		request.setAttribute("stdList", studentList);
 		RequestDispatcher rd = request.getRequestDispatcher("Student_Details.jsp");
+		request.setAttribute("stdList", studentList);
 		rd.forward(request, response);
-
-//		for (Student std : studentList) {
-//			System.out.println(std.id + "\t" + std.firstname + "\t" + std.lastname + "\t" + std.gender + "\t"
-//					+ std.course + "\t" + std.address + "\t" + std.contact);
-//		}
 
 		doGet(request, response);
 	}
